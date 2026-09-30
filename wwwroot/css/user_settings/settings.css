@@ -1,0 +1,84 @@
+@import url('/css/shared/base.css');
+
+.settings-page {
+  min-height: 100vh;
+  background: var(--parchment);
+}
+
+.settings-body {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+}
+
+.settings-card {
+  width: 100%;
+  max-width: 480px;
+  background: #fff;
+  border: 1.5px solid var(--parchment-line);
+  border-radius: 8px;
+  padding: 2.2rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.settings-card h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 1.7rem;
+  font-weight: 500;
+  color: var(--ink);
+  margin: 0 0 0.3rem;
+}
+
+.settings-card .sub {
+  color: var(--text-mute);
+  font-size: 0.92rem;
+  margin: 0 0 1.8rem;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--parchment-line);
+}
+
+.toggle-row:last-of-type { border-bottom: none; }
+
+.toggle-row .label-text { font-size: 0.95rem; color: var(--text); font-weight: 500; }
+.toggle-row .label-help { font-size: 0.8rem; color: var(--text-mute); margin-top: 0.15rem; }
+
+.switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.switch input { opacity: 0; width: 0; height: 0; }
+
+.switch .slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: var(--parchment-line);
+  border-radius: 24px;
+  transition: 0.15s;
+}
+
+.switch .slider::before {
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.15s;
+}
+
+.switch input:checked + .slider { background: var(--stamp); }
+.switch input:checked + .slider::before { transform: translateX(20px); }
+
+.settings-card .btn-stamp { margin-top: 1.6rem; width: 100%; }

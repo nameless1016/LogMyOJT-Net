@@ -1,0 +1,80 @@
+@page "/"
+@page "/login"
+@inject UserState State
+@inject NavigationManager Nav
+
+<PageTitle>Sign In · LogMyOJT</PageTitle>
+
+<div class="login-page">
+    <div class="ledger">
+        <div class="brand">
+            <span class="brand-mark">LOG·MY·OJT</span>
+            <h1>Your internship hours, tracked to the minute.</h1>
+            <p>No more paper logbooks or lost signatures. Time in, time out, and a running tally your supervisor can approve with one click.</p>
+        </div>
+        <div class="ledger-sample">
+            <div class="ledger-row">
+                <span class="day">Mon</span>
+                <span>08:58 AM &nbsp;→&nbsp; 05:02 PM</span>
+                <span class="status ok">approved</span>
+            </div>
+            <div class="ledger-row">
+                <span class="day">Tue</span>
+                <span>09:01 AM &nbsp;→&nbsp; 05:00 PM</span>
+                <span class="status ok">approved</span>
+            </div>
+            <div class="ledger-row">
+                <span class="day">Wed</span>
+                <span>09:00 AM &nbsp;→&nbsp; —</span>
+                <span class="status pending">pending</span>
+            </div>
+        </div>
+        <div class="ledger-foot">142 / 486 hours logged this term</div>
+    </div>
+
+    <div class="form-side">
+        <div class="form-card">
+            <p class="eyebrow">Welcome back</p>
+            <h2>Sign in</h2>
+            <p class="sub">Pick up where you left off — your logs and reports are waiting.</p>
+
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="alert alert-error">@error</div>
+            }
+
+            <form @onsubmit="SignIn" @onsubmit:preventDefault>
+                <div class="field">
+                    <label for="id_username">Username</label>
+                    <input type="text" id="id_username" class="form-input" placeholder="Your username" @bind="username" @bind:event="oninput" required>
+                </div>
+                <div class="field">
+                    <label for="id_password">Password</label>
+                    <input type="password" id="id_password" class="form-input" placeholder="Your password" @bind="password" @bind:event="oninput" required>
+                </div>
+                <button type="submit" class="btn-stamp">Sign in</button>
+            </form>
+
+            <p class="switch-line">New to LogMyOJT? <a href="/register">Create an account</a></p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string username = "";
+    private string password = "";
+    private string? error;
+
+    // no accounts exist yet (no database), so any username and password gets you in
+    private void SignIn()
+    {
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+        {
+            error = "Enter your username and password.";
+            return;
+        }
+
+        State.Username = username.Trim();
+        Nav.NavigateTo("/home");
+    }
+}

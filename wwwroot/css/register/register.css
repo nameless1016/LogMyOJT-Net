@@ -1,0 +1,20 @@
+@import url('/css/shared/base.css');
+@import url('/css/login/login.css');
+
+/* Register feature — reuses the login split-page layout classes
+   (ledger + form-card) since both screens share the same shell.
+   Register-specific tweaks only. */
+
+.form-card .field-errors {
+  font-size: 0.8rem;
+  color: var(--error);
+  margin-top: 0.35rem;
+}
+
+.alert-error ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.alert-error li { margin-bottom: 0.2rem; }
+.alert-error li:last-child { margin-bottom: 0; }

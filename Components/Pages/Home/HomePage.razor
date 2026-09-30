@@ -1,0 +1,29 @@
+@page "/home"
+@inject UserState State
+
+<PageTitle>Home · LogMyOJT</PageTitle>
+
+<div class="dashboard">
+    <TopBar />
+    <div class="dash-body">
+        <div class="dash-card">
+            <p class="eyebrow">Home screen</p>
+            <h2>Welcome, @State.WelcomeName.</h2>
+            <p>This is where your hour tally, pace alerts, and daily time log will live once your OJT placement is set up. For now, check out your Profile and Settings from the menu above.</p>
+            <div class="hours-stub">
+                <div>
+                    <div class="num">0</div>
+                    <div class="lbl">hours logged</div>
+                </div>
+                <div>
+                    <div class="num">—</div>
+                    <div class="lbl">hours remaining</div>
+                </div>
+                <div>
+                    <div class="num">0%</div>
+                    <div class="lbl">complete</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

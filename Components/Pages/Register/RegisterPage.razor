@@ -1,0 +1,116 @@
+@page "/register"
+@inject UserState State
+@inject NavigationManager Nav
+
+<PageTitle>Create Account · LogMyOJT</PageTitle>
+
+<div class="login-page">
+    <div class="ledger">
+        <div class="brand">
+            <span class="brand-mark">LOG·MY·OJT</span>
+            <h1>Set up in minutes. Log hours from day one.</h1>
+            <p>Add your placement details once — company, supervisor, required hours — and the tally runs itself for the rest of the term.</p>
+        </div>
+        <div class="ledger-sample">
+            <div class="ledger-row">
+                <span class="day">Req.</span>
+                <span>Total hours needed</span>
+                <span class="status pending">486 hrs</span>
+            </div>
+            <div class="ledger-row">
+                <span class="day">Sup.</span>
+                <span>Digital approval link</span>
+                <span class="status ok">enabled</span>
+            </div>
+            <div class="ledger-row">
+                <span class="day">Rep.</span>
+                <span>Submission-ready PDF</span>
+                <span class="status ok">ready</span>
+            </div>
+        </div>
+        <div class="ledger-foot">Built for OJT, practicum &amp; internship placements</div>
+    </div>
+
+    <div class="form-side">
+        <div class="form-card">
+            <p class="eyebrow">Get started</p>
+            <h2>Create your account</h2>
+            <p class="sub">One account per student — your logs stay private to you.</p>
+
+            @if (errors.Count > 0)
+            {
+                <div class="alert alert-error">
+                    <ul>
+                        @foreach (var err in errors)
+                        {
+                            <li>@err</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            <form @onsubmit="CreateAccount" @onsubmit:preventDefault>
+                <div class="field">
+                    <label for="id_last_name">Last name</label>
+                    <input type="text" id="id_last_name" class="form-input" placeholder="Dela Cruz" @bind="lastName" @bind:event="oninput">
+                </div>
+                <div class="field">
+                    <label for="id_first_name">First name</label>
+                    <input type="text" id="id_first_name" class="form-input" placeholder="Juan" @bind="firstName" @bind:event="oninput">
+                </div>
+                <div class="field">
+                    <label for="id_username">Username</label>
+                    <input type="text" id="id_username" class="form-input" placeholder="Choose a username" @bind="username" @bind:event="oninput">
+                </div>
+                <div class="field">
+                    <label for="id_email">School email</label>
+                    <input type="email" id="id_email" class="form-input" placeholder="you@school.edu" @bind="email" @bind:event="oninput">
+                </div>
+                <div class="field">
+                    <label for="id_password">Password</label>
+                    <input type="password" id="id_password" class="form-input" placeholder="Create a password" @bind="password" @bind:event="oninput">
+                    <div class="field-help">At least 8 characters.</div>
+                </div>
+                <div class="field">
+                    <label for="id_password_confirm">Confirm password</label>
+                    <input type="password" id="id_password_confirm" class="form-input" placeholder="Confirm your password" @bind="passwordConfirm" @bind:event="oninput">
+                </div>
+                <button type="submit" class="btn-stamp">Create account</button>
+            </form>
+
+            <p class="switch-line">Already logging hours? <a href="/login">Sign in</a></p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string lastName = "";
+    private string firstName = "";
+    private string username = "";
+    private string email = "";
+    private string password = "";
+    private string passwordConfirm = "";
+    private List<string> errors = new();
+
+    private void CreateAccount()
+    {
+        errors = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(lastName)) errors.Add("Last name is required.");
+        if (string.IsNullOrWhiteSpace(firstName)) errors.Add("First name is required.");
+        if (string.IsNullOrWhiteSpace(username)) errors.Add("Username is required.");
+        if (string.IsNullOrWhiteSpace(email)) errors.Add("Email is required.");
+        if (password.Length < 8)
+            errors.Add("Password must be at least 8 characters.");
+        else if (password != passwordConfirm)
+            errors.Add("Passwords do not match.");
+
+        if (errors.Count > 0) return;
+
+        // nothing is stored yet, we just remember the names for this session
+        State.Username = username.Trim();
+        State.FirstName = firstName.Trim();
+        State.LastName = lastName.Trim();
+        Nav.NavigateTo("/home");
+    }
+}

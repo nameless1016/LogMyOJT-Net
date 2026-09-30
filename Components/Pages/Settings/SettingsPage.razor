@@ -1,0 +1,35 @@
+@page "/settings"
+@inject UserState State
+
+<PageTitle>Settings · LogMyOJT</PageTitle>
+
+<div class="settings-page">
+    <TopBar Active="settings" />
+    <div class="settings-body">
+        <div class="settings-card">
+            <h2>Settings</h2>
+            <p class="sub">Control how LogMyOJT looks and notifies you.</p>
+
+            <div class="toggle-row">
+                <div>
+                    <div class="label-text">Dark mode</div>
+                    <div class="label-help">Switch the interface to a darker theme.</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" @bind="State.DarkMode">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="toggle-row">
+                <div>
+                    <div class="label-text">Email notifications</div>
+                    <div class="label-help">Get notified when a supervisor approves an entry.</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" @bind="State.EmailNotifications">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+</div>

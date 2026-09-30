@@ -1,0 +1,48 @@
+@inject UserState State
+@inject NavigationManager Nav
+
+<div class="top-bar">
+    <a href="/home" class="brand-mark">LOG·MY·OJT</a>
+    <div class="nav-user">
+        <button class="user-chip-btn" type="button" aria-haspopup="true" aria-expanded="@(open ? "true" : "false")" @onclick="Toggle">
+            <span class="chip-avatar">
+                @if (State.ProfileImage is not null)
+                {
+                    <img src="@State.ProfileImage" alt="">
+                }
+                else
+                {
+                    @State.Initial
+                }
+            </span>
+            <span>@State.DisplayName</span>
+            <span class="chip-caret">▾</span>
+        </button>
+        @if (open)
+        {
+            <div class="nav-backdrop" @onclick="Close"></div>
+        }
+        <div class="nav-dropdown @(open ? "open" : "")">
+            <a href="/profile" class="@(Active == "profile" ? "active" : null)">Profile</a>
+            <a href="/settings" class="@(Active == "settings" ? "active" : null)">Settings</a>
+            <div class="dropdown-divider"></div>
+            <button type="button" @onclick="LogOut">Log out</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    // which menu item to highlight, "profile" or "settings"
+    [Parameter] public string? Active { get; set; }
+
+    private bool open;
+
+    private void Toggle() => open = !open;
+    private void Close() => open = false;
+
+    private void LogOut()
+    {
+        State.Clear();
+        Nav.NavigateTo("/login");
+    }
+}

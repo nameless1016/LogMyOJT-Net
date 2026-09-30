@@ -1,0 +1,265 @@
+/* ============================================
+   Shared design tokens — LogMyOJT
+   This is a genuinely cross-cutting utility (colors, fonts, spacing),
+   not feature logic. Each feature's own CSS file imports this and
+   then defines its own layout/behavior on top of it.
+   ============================================ */
+
+:root {
+  --ink: #1b2a41;
+  --ink-soft: #33465f;
+  --parchment: #faf6ed;
+  --parchment-line: #e4dcc8;
+  --stamp: #c1622d;
+  --stamp-dark: #a44f22;
+  --approved: #4f7942;
+  --error: #b3392c;
+  --text: #2b2b28;
+  --text-mute: #6b6559;
+  --shadow-soft: 0 1px 2px rgba(27, 42, 65, 0.06), 0 4px 16px rgba(27, 42, 65, 0.05);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  color: var(--text);
+  background: var(--ink);
+}
+
+.brand-mark {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  color: var(--stamp);
+  border: 1px solid var(--stamp);
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 3px;
+}
+
+.btn-stamp {
+  display: inline-block;
+  padding: 0.8rem 1rem;
+  background: var(--stamp);
+  color: var(--parchment);
+  border: none;
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.97rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  transition: background 0.15s ease;
+}
+
+.btn-stamp:hover { background: var(--stamp-dark); }
+
+.btn-ghost {
+  display: inline-block;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  color: var(--parchment);
+  border: 1.5px solid rgba(250, 246, 237, 0.3);
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border: 1.5px solid var(--parchment-line);
+  border-radius: 4px;
+  background: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  color: var(--text);
+  transition: border-color 0.15s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--stamp);
+}
+
+.field { margin-bottom: 1.15rem; }
+
+.field label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin-bottom: 0.4rem;
+}
+
+.field-help {
+  font-size: 0.78rem;
+  color: var(--text-mute);
+  margin-top: 0.35rem;
+}
+
+.alert {
+  padding: 0.7rem 0.9rem;
+  border-radius: 4px;
+  font-size: 0.87rem;
+  margin-bottom: 1.3rem;
+}
+
+.alert-error {
+  background: rgba(179, 57, 44, 0.08);
+  color: var(--error);
+  border: 1px solid rgba(179, 57, 44, 0.25);
+}
+
+.alert-success {
+  background: rgba(79, 121, 66, 0.08);
+  color: var(--approved);
+  border: 1px solid rgba(79, 121, 66, 0.25);
+}
+
+.top-bar {
+  background: var(--ink);
+  color: var(--parchment);
+  padding: 1.1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+a.brand-mark {
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+a.brand-mark:hover { opacity: 0.8; }
+
+.top-bar-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+}
+
+/* Keyboard focus visibility — always visible, never removed */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+.switch input:focus-visible + .slider {
+  outline: 2px solid var(--stamp);
+  outline-offset: 2px;
+}
+
+/* User menu — a dropdown under the username chip, holding
+   Profile / Settings / Log out. Used identically across the
+   authenticated screens (Home, Profile, Settings), so it lives here
+   as shared nav chrome rather than being owned by any one feature. */
+.nav-user { position: relative; }
+
+.user-chip-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: transparent;
+  border: none;
+  padding: 0.3rem 0.4rem;
+  border-radius: 6px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.82rem;
+  color: rgba(250, 246, 237, 0.9);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.user-chip-btn:hover { background: rgba(250, 246, 237, 0.08); }
+
+.chip-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(250, 246, 237, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--parchment);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.chip-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.chip-caret {
+  font-size: 0.6rem;
+  color: rgba(250, 246, 237, 0.5);
+  transition: transform 0.15s ease;
+}
+
+.user-chip-btn[aria-expanded="true"] .chip-caret { transform: rotate(180deg); }
+
+.nav-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background: #fff;
+  border: 1.5px solid var(--parchment-line);
+  border-radius: 8px;
+  box-shadow: var(--shadow-soft), 0 8px 24px rgba(27, 42, 65, 0.18);
+  min-width: 170px;
+  padding: 0.4rem;
+  display: none;
+  z-index: 20;
+}
+
+.nav-dropdown.open { display: block; }
+
+.nav-dropdown a,
+.nav-dropdown button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  border-radius: 5px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.88rem;
+  color: var(--text);
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.nav-dropdown a:hover,
+.nav-dropdown button:hover { background: var(--parchment); }
+
+.nav-dropdown a.active {
+  color: var(--stamp);
+  font-weight: 600;
+}
+
+.nav-dropdown .dropdown-divider {
+  height: 1px;
+  background: var(--parchment-line);
+  margin: 0.3rem 0.2rem;
+}
+
+@media (max-width: 640px) {
+  .top-bar {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+  }
+}

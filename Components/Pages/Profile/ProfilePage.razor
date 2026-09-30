@@ -1,0 +1,93 @@
+@page "/profile"
+@inject UserState State
+
+<PageTitle>Profile · LogMyOJT</PageTitle>
+
+<div class="profile-page">
+    <TopBar Active="profile" />
+    <div class="profile-body">
+        <div class="profile-card">
+            <h2>Your profile</h2>
+            <p class="sub">This is how you'll appear on approval requests sent to your supervisor.</p>
+
+            @if (saved)
+            {
+                <div class="alert alert-success">Profile saved.</div>
+            }
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="alert alert-error">@error</div>
+            }
+
+            <form @onsubmit="Save" @onsubmit:preventDefault>
+                <div class="avatar-picker">
+                    <span class="avatar-preview">
+                        @if (previewUrl is not null)
+                        {
+                            <img alt="Profile photo" src="@previewUrl">
+                        }
+                        else
+                        {
+                            <span>@State.Initial</span>
+                        }
+                    </span>
+                    <label class="avatar-overlay" for="id_profile_image">Change<br>photo</label>
+                    <InputFile id="id_profile_image" accept="image/*" OnChange="PickImage" />
+                </div>
+
+                <div class="field">
+                    <label for="id_full_name">Full name</label>
+                    <input type="text" id="id_full_name" class="form-input" placeholder="Juan Dela Cruz" @bind="fullName" @bind:event="oninput">
+                </div>
+                <div class="field">
+                    <label for="id_bio">Bio</label>
+                    <textarea id="id_bio" class="form-input" placeholder="A short line about your OJT placement..." @bind="bio" @bind:event="oninput"></textarea>
+                </div>
+                <button type="submit" class="btn-stamp">Save profile</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@code {
+    private const long MaxImageBytes = 1024 * 1024;
+
+    private string fullName = "";
+    private string bio = "";
+    private string? previewUrl;
+    private string? error;
+    private bool saved;
+
+    protected override void OnInitialized()
+    {
+        fullName = State.FullName;
+        bio = State.Bio;
+        previewUrl = State.ProfileImage;
+    }
+
+    // shows the picked photo right away, same idea as the old profile.js preview
+    private async Task PickImage(InputFileChangeEventArgs e)
+    {
+        error = null;
+        var file = e.File;
+
+        if (file.Size > MaxImageBytes)
+        {
+            error = "That photo is too big, keep it under 1 MB.";
+            return;
+        }
+
+        using var ms = new MemoryStream();
+        await file.OpenReadStream(MaxImageBytes).CopyToAsync(ms);
+        previewUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(ms.ToArray())}";
+        saved = false;
+    }
+
+    private void Save()
+    {
+        State.FullName = fullName.Trim();
+        State.Bio = bio.Trim();
+        State.ProfileImage = previewUrl;
+        saved = true;
+    }
+}
