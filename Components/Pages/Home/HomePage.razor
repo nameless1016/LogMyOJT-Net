@@ -1,29 +1,230 @@
 @page "/home"
-@inject UserState State
+@inherits SignedInPage
+@implements IDisposable
 
-<PageTitle>Home · LogMyOJT</PageTitle>
+<PageTitle>Dashboard · LogMyOJT</PageTitle>
 
-<div class="dashboard">
-    <TopBar />
-    <div class="dash-body">
-        <div class="dash-card">
-            <p class="eyebrow">Home screen</p>
-            <h2>Welcome, @State.WelcomeName.</h2>
-            <p>This is where your hour tally, pace alerts, and daily time log will live once your OJT placement is set up. For now, check out your Profile and Settings from the menu above.</p>
-            <div class="hours-stub">
-                <div>
-                    <div class="num">0</div>
-                    <div class="lbl">hours logged</div>
+<main class="page">
+    <PageHeader Title="@Greeting" Subtitle="@Subtitle" />
+
+    <div class="grid gap-5 lg:grid-cols-[330px_minmax(0,1fr)_360px]">
+        @* progress ring *@
+        <section class="card p-7">
+            <div class="eyebrow">Overall progress</div>
+            <div class="mt-4 flex items-center gap-5">
+                <div class="relative h-[122px] w-[122px] shrink-0">
+                    <svg viewBox="0 0 122 122" class="h-full w-full -rotate-90">
+                        <circle cx="61" cy="61" r="54" fill="none" stroke-width="14" class="stroke-line" />
+                        <circle cx="61" cy="61" r="54" fill="none" stroke-width="14" stroke-linecap="round" class="stroke-accent"
+                                stroke-dasharray="@Dash" />
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center font-mono text-[26px] font-semibold text-fg">@Ojt.PercentDone%</div>
                 </div>
-                <div>
-                    <div class="num">—</div>
-                    <div class="lbl">hours remaining</div>
-                </div>
-                <div>
-                    <div class="num">0%</div>
-                    <div class="lbl">complete</div>
+                <div class="min-w-0">
+                    <div class="font-mono text-[26px] font-semibold leading-none text-fg">@Fmt.Hours(Ojt.HoursLogged)</div>
+                    <div class="mt-1 text-[12.5px] text-muted">of @Ojt.Placement.RequiredHours hrs</div>
+                    <div class="mt-3">@PaceTag</div>
+                    <div class="mt-2 text-xs text-muted">@EndText</div>
                 </div>
             </div>
-        </div>
+        </section>
+
+        @* today and the clock *@
+        <section class="card p-7">
+            <div class="eyebrow">Today</div>
+            <div class="mt-3 flex flex-wrap items-end justify-between gap-6">
+                <div>
+                    @if (Ojt.Running is { } run)
+                    {
+                        <div class="flex items-center gap-2 text-base font-medium text-fg">
+                            <span class="h-2.5 w-2.5 rounded-full bg-ok"></span> Clocked in at @Fmt.Time(run.TimeIn)
+                        </div>
+                        <div class="mt-4 font-mono text-5xl font-medium tabular-nums text-fg">@Elapsed(run)</div>
+                        <div class="mt-1 text-[12.5px] text-muted">worked so far today</div>
+                    }
+                    else
+                    {
+                        <div class="flex items-center gap-2 text-base font-medium text-fg">
+                            <span class="h-2.5 w-2.5 rounded-full bg-line"></span> Not clocked in
+                        </div>
+                        <div class="mt-4 font-mono text-5xl font-medium tabular-nums text-fg">@Fmt.Hours(TodayHours)</div>
+                        <div class="mt-1 text-[12.5px] text-muted">hours logged today</div>
+                    }
+                </div>
+                <div class="flex w-full flex-col gap-3 sm:w-[156px]">
+                    @if (Ojt.Running is { } r2)
+                    {
+                        <button type="button" class="btn-primary" @onclick="ClockOut"><Icon Name="clock" /> Time out</button>
+                        <a href="/time-logs/@r2.Id/edit" class="btn-outline"><Icon Name="plus" /> Add note</a>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn-primary" @onclick="ClockIn"><Icon Name="clock" /> Time in</button>
+                        <a href="/time-logs/new" class="btn-outline"><Icon Name="plus" /> Add entry</a>
+                    }
+                </div>
+            </div>
+        </section>
+
+        @* reminders *@
+        <section class="card p-7">
+            <div class="eyebrow">Reminders</div>
+            <div class="mt-4 space-y-3.5">
+                @if (reminders.Count == 0)
+                {
+                    <p class="text-sm text-muted">Nothing to do right now.</p>
+                }
+                @foreach (var r in reminders.Take(3))
+                {
+                    <div class="flex items-start gap-3">
+                        <span class="@(r.Tone == "warn" ? "bg-accent/10 text-accent" : "bg-ok/10 text-ok") flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full">
+                            <Icon Name="@r.Icon" />
+                        </span>
+                        <div>
+                            <div class="text-sm font-medium text-fg">@r.Title</div>
+                            <div class="text-[12.5px] text-muted">@r.Detail</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
     </div>
-</div>
+
+    <div class="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard Value="@Fmt.Hours(Ojt.HoursRemaining)" Label="hours remaining" Icon="clock" />
+        <StatCard Value="@Fmt.Hours(Ojt.HoursThisWeek(Today))" Label="hrs logged this week" Icon="file" Tone="@(Ojt.HoursThisWeek(Today) > 0 ? "ok" : "")" />
+        <StatCard Value="@Ojt.PendingCount.ToString()" Label="waiting for approval" Icon="checkc" Tone="@(Ojt.PendingCount > 0 ? "accent" : "")" />
+        <StatCard Value="@(Ojt.DaysLeft(Today)?.ToString() ?? "—")" Label="days left" Icon="calendar" />
+    </div>
+
+    <section class="card mt-5 overflow-hidden">
+        <div class="flex items-center justify-between px-7 pb-4 pt-6">
+            <h2 class="card-title">Recent logs</h2>
+            <a href="/time-logs" class="text-[13.5px] font-semibold text-accent hover:underline">View all →</a>
+        </div>
+        @if (!Ojt.Logs.Any())
+        {
+            <p class="border-t border-line px-7 py-10 text-center text-sm text-muted">No entries yet. Hit Time in above to start your first one.</p>
+        }
+        else
+        {
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[640px]">
+                    <thead class="bg-page/70">
+                        <tr class="border-y border-line">
+                            <th class="th">Date</th><th class="th">Time in</th><th class="th">Time out</th><th class="th">Hours</th><th class="th">Activity</th><th class="th">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var l in Ojt.Newest.Take(4))
+                        {
+                            <tr class="border-b border-line last:border-b-0">
+                                <td class="td font-medium text-fg">@Fmt.Date(l.Date)</td>
+                                <td class="td font-mono text-[13.5px]">@Fmt.Time(l.TimeIn)</td>
+                                <td class="td font-mono text-[13.5px]">@(l.TimeOut is { } o ? Fmt.Time(o) : "—")</td>
+                                <td class="td font-mono text-[13.5px] font-medium text-fg">@(l.IsRunning ? "…" : Fmt.Hours(l.Hours))</td>
+                                <td class="td">@(string.IsNullOrWhiteSpace(l.Note) ? "No activity note" : l.Note)</td>
+                                <td class="td"><StatusPill Status="@(l.IsRunning ? "pending" : l.Status)" /></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</main>
+
+@code {
+    private Timer? timer;
+    private List<Reminder> reminders = new();
+
+    private string Greeting
+    {
+        get
+        {
+            int h = DateTime.Now.Hour;
+            string part = h < 12 ? "morning" : h < 18 ? "afternoon" : "evening";
+            return $"Good {part}, {State.DisplayName}.";
+        }
+    }
+
+    private string Subtitle
+    {
+        get
+        {
+            var text = DateTime.Now.ToString("dddd, MMM d", System.Globalization.CultureInfo.InvariantCulture);
+            return Ojt.WeekInfo(Today) is { } w ? $"{text}  ·  Week {w.Week} of {w.Total}" : text;
+        }
+    }
+
+    private string Dash
+    {
+        get
+        {
+            var c = System.Globalization.CultureInfo.InvariantCulture;
+            double circ = 2 * Math.PI * 54;
+            return $"{(circ * Ojt.PercentDone / 100).ToString("0.0", c)} {circ.ToString("0.0", c)}";
+        }
+    }
+
+    private double TodayHours => Ojt.Logs.Where(l => l.Date == Today && !l.IsRunning).Sum(l => l.Hours);
+
+    private string EndText => Ojt.Placement.EndDate is { } e ? $"Ends {Fmt.LongDate(e)}" : "";
+
+    // the little tag under the hours total
+    private RenderFragment PaceTag => __builder =>
+    {
+        if (Ojt.PaceDelta(Today) is not { } d)
+        {
+            <a href="/placement" class="text-[13px] font-semibold text-accent hover:underline">Set up placement →</a>
+        }
+        else if (d < -0.5)
+        {
+            <span class="pill-pending">−@Fmt.Hours(-d) hrs behind</span>
+        }
+        else if (d > 0.5)
+        {
+            <span class="pill-approved">+@Fmt.Hours(d) hrs ahead</span>
+        }
+        else
+        {
+            <span class="pill-approved">On pace</span>
+        }
+    };
+
+    private string Elapsed(TimeLogEntry run)
+    {
+        var span = DateTime.Now - run.Date.ToDateTime(run.TimeIn);
+        if (span < TimeSpan.Zero) span = TimeSpan.Zero;
+        return $"{(int)span.TotalHours:00}:{span.Minutes:00}:{span.Seconds:00}";
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        reminders = Ojt.Reminders(Today);
+    }
+
+    // ticks once a second, but only redraws while the clock is running
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+            timer = new Timer(_ => { if (Ojt.Running is not null) InvokeAsync(StateHasChanged); }, null, 1000, 1000);
+    }
+
+    private void ClockIn()
+    {
+        Ojt.ClockIn(DateTime.Now);
+        reminders = Ojt.Reminders(Today);
+        State.Notify();
+    }
+
+    private void ClockOut()
+    {
+        Ojt.ClockOut(DateTime.Now);
+        reminders = Ojt.Reminders(Today);
+        State.Notify();
+    }
+
+    public void Dispose() => timer?.Dispose();
+}
