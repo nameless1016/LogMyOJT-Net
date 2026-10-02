@@ -4,84 +4,57 @@
 
 <PageTitle>Create Account · LogMyOJT</PageTitle>
 
-<div class="login-page">
-    <div class="ledger">
-        <div class="brand">
-            <span class="brand-mark">LOG·MY·OJT</span>
-            <h1>Set up in minutes. Log hours from day one.</h1>
-            <p>Add your placement details once — company, supervisor, required hours — and the tally runs itself for the rest of the term.</p>
+<AuthShell Headline="Set up in minutes. Log hours from day one."
+           Blurb="Add your placement details once — company, supervisor, required hours — and the tally runs itself for the rest of the term."
+           Foot="Built for OJT, practicum & internship placements"
+           Rows="rows">
+    <p class="mb-1.5 font-mono text-[0.78rem] text-muted">Get started</p>
+    <h2 class="mb-1.5 font-serif text-[1.8rem] font-medium text-fg">Create your account</h2>
+    <p class="mb-8 text-[0.95rem] leading-normal text-muted">One account per student — your logs stay private to you.</p>
+
+    @if (errors.Count > 0)
+    {
+        <div class="alert-error">
+            <ul class="list-disc pl-4">
+                @foreach (var err in errors)
+                {
+                    <li>@err</li>
+                }
+            </ul>
         </div>
-        <div class="ledger-sample">
-            <div class="ledger-row">
-                <span class="day">Req.</span>
-                <span>Total hours needed</span>
-                <span class="status pending">486 hrs</span>
-            </div>
-            <div class="ledger-row">
-                <span class="day">Sup.</span>
-                <span>Digital approval link</span>
-                <span class="status ok">enabled</span>
-            </div>
-            <div class="ledger-row">
-                <span class="day">Rep.</span>
-                <span>Submission-ready PDF</span>
-                <span class="status ok">ready</span>
-            </div>
+    }
+
+    <form @onsubmit="CreateAccount" @onsubmit:preventDefault>
+        <div class="mb-4">
+            <label for="id_last_name" class="label">Last name</label>
+            <input type="text" id="id_last_name" class="input" placeholder="Dela Cruz" @bind="lastName" @bind:event="oninput" />
         </div>
-        <div class="ledger-foot">Built for OJT, practicum &amp; internship placements</div>
-    </div>
-
-    <div class="form-side">
-        <div class="form-card">
-            <p class="eyebrow">Get started</p>
-            <h2>Create your account</h2>
-            <p class="sub">One account per student — your logs stay private to you.</p>
-
-            @if (errors.Count > 0)
-            {
-                <div class="alert alert-error">
-                    <ul>
-                        @foreach (var err in errors)
-                        {
-                            <li>@err</li>
-                        }
-                    </ul>
-                </div>
-            }
-
-            <form @onsubmit="CreateAccount" @onsubmit:preventDefault>
-                <div class="field">
-                    <label for="id_last_name">Last name</label>
-                    <input type="text" id="id_last_name" class="form-input" placeholder="Dela Cruz" @bind="lastName" @bind:event="oninput">
-                </div>
-                <div class="field">
-                    <label for="id_first_name">First name</label>
-                    <input type="text" id="id_first_name" class="form-input" placeholder="Juan" @bind="firstName" @bind:event="oninput">
-                </div>
-                <div class="field">
-                    <label for="id_username">Username</label>
-                    <input type="text" id="id_username" class="form-input" placeholder="Choose a username" @bind="username" @bind:event="oninput">
-                </div>
-                <div class="field">
-                    <label for="id_email">School email</label>
-                    <input type="email" id="id_email" class="form-input" placeholder="you@school.edu" @bind="email" @bind:event="oninput">
-                </div>
-                <div class="field">
-                    <label for="id_password">Password</label>
-                    <input type="password" id="id_password" class="form-input" placeholder="Create a password" @bind="password" @bind:event="oninput">
-                    <div class="field-help">At least 8 characters.</div>
-                </div>
-                <div class="field">
-                    <label for="id_password_confirm">Confirm password</label>
-                    <input type="password" id="id_password_confirm" class="form-input" placeholder="Confirm your password" @bind="passwordConfirm" @bind:event="oninput">
-                </div>
-                <button type="submit" class="btn-stamp">Create account</button>
-            </form>
-
-            <p class="switch-line">Already logging hours? <a href="/login">Sign in</a></p>
+        <div class="mb-4">
+            <label for="id_first_name" class="label">First name</label>
+            <input type="text" id="id_first_name" class="input" placeholder="Juan" @bind="firstName" @bind:event="oninput" />
         </div>
-    </div>
-</div>
+        <div class="mb-4">
+            <label for="id_username" class="label">Username</label>
+            <input type="text" id="id_username" class="input" placeholder="Choose a username" @bind="username" @bind:event="oninput" />
+        </div>
+        <div class="mb-4">
+            <label for="id_email" class="label">School email</label>
+            <input type="email" id="id_email" class="input" placeholder="you@school.edu" @bind="email" @bind:event="oninput" />
+        </div>
+        <div class="mb-4">
+            <label for="id_password" class="label">Password</label>
+            <input type="password" id="id_password" class="input" placeholder="Create a password" @bind="password" @bind:event="oninput" />
+            <div class="help">At least 8 characters.</div>
+        </div>
+        <div class="mb-5">
+            <label for="id_password_confirm" class="label">Confirm password</label>
+            <input type="password" id="id_password_confirm" class="input" placeholder="Confirm your password" @bind="passwordConfirm" @bind:event="oninput" />
+        </div>
+        <button type="submit" class="btn-primary w-full active:scale-[0.99]">Create account</button>
+    </form>
+
+    <p class="mt-6 text-center text-sm text-muted">Already logging hours? <a href="/login" class="font-semibold text-accent hover:underline">Sign in</a></p>
+</AuthShell>
 
 @code {
     private string lastName = "";
@@ -91,6 +64,13 @@
     private string password = "";
     private string passwordConfirm = "";
     private List<string> errors = new();
+
+    private static readonly AuthShell.LedgerRow[] rows =
+    {
+        new("Req.", "Total hours needed", "486 hrs", false),
+        new("Sup.", "Digital approval link", "enabled", true),
+        new("Rep.", "Submission-ready CSV", "ready", true),
+    };
 
     private void CreateAccount()
     {
@@ -111,6 +91,8 @@
         State.Username = username.Trim();
         State.FirstName = firstName.Trim();
         State.LastName = lastName.Trim();
+        State.SignedIn = true;
+        State.Notify();
         Nav.NavigateTo("/home");
     }
 }

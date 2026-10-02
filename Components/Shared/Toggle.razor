@@ -1,0 +1,19 @@
+<div class="flex items-center justify-between gap-6 border-b border-line py-4 last:border-b-0">
+    <div>
+        <div class="text-[15px] font-medium text-body">@Label</div>
+        <div class="mt-0.5 text-[12.8px] text-muted">@Help</div>
+    </div>
+    <label class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer">
+        <input type="checkbox" class="peer sr-only" checked="@Value" @onchange="OnChange" aria-label="@Label" />
+        <span class="absolute inset-0 rounded-full bg-line transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform after:content-[''] peer-checked:bg-accent peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent"></span>
+    </label>
+</div>
+
+@code {
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public string Help { get; set; } = "";
+    [Parameter] public bool Value { get; set; }
+    [Parameter] public EventCallback<bool> ValueChanged { get; set; }
+
+    private Task OnChange(ChangeEventArgs e) => ValueChanged.InvokeAsync((bool)(e.Value ?? false));
+}

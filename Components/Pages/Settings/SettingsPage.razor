@@ -1,35 +1,26 @@
 @page "/settings"
-@inject UserState State
+@inherits SignedInPage
 
 <PageTitle>Settings · LogMyOJT</PageTitle>
 
-<div class="settings-page">
-    <TopBar Active="settings" />
-    <div class="settings-body">
-        <div class="settings-card">
-            <h2>Settings</h2>
-            <p class="sub">Control how LogMyOJT looks and notifies you.</p>
+<main class="page">
+    <div class="card mx-auto w-full max-w-[480px] p-9">
+        <h1 class="font-serif text-[1.7rem] font-medium text-fg">Settings</h1>
+        <p class="mb-4 mt-1 text-[14.7px] text-muted">Control how LogMyOJT looks and notifies you.</p>
 
-            <div class="toggle-row">
-                <div>
-                    <div class="label-text">Dark mode</div>
-                    <div class="label-help">Switch the interface to a darker theme.</div>
-                </div>
-                <label class="switch">
-                    <input type="checkbox" @bind="State.DarkMode">
-                    <span class="slider"></span>
-                </label>
-            </div>
-            <div class="toggle-row">
-                <div>
-                    <div class="label-text">Email notifications</div>
-                    <div class="label-help">Get notified when a supervisor approves an entry.</div>
-                </div>
-                <label class="switch">
-                    <input type="checkbox" @bind="State.EmailNotifications">
-                    <span class="slider"></span>
-                </label>
-            </div>
-        </div>
+        <Toggle Label="Dark mode" Help="Switch the interface to a darker theme."
+                Value="State.DarkMode" ValueChanged="SetDark" />
+        <Toggle Label="Email notifications" Help="Get notified when a supervisor approves an entry."
+                Value="State.EmailNotifications" ValueChanged="SetEmail" />
     </div>
-</div>
+</main>
+
+@code {
+    private void SetDark(bool on)
+    {
+        State.DarkMode = on;
+        State.Notify();
+    }
+
+    private void SetEmail(bool on) => State.EmailNotifications = on;
+}

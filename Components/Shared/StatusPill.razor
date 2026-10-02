@@ -1,0 +1,12 @@
+<span class="@Css">@Status</span>
+
+@code {
+    [Parameter] public string Status { get; set; } = "pending";
+
+    private string Css => Status switch
+    {
+        "approved" => "pill-approved",
+        "rejected" => "pill-rejected",
+        _ => "pill-pending",
+    };
+}

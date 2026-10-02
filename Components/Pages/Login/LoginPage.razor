@@ -5,65 +5,45 @@
 
 <PageTitle>Sign In · LogMyOJT</PageTitle>
 
-<div class="login-page">
-    <div class="ledger">
-        <div class="brand">
-            <span class="brand-mark">LOG·MY·OJT</span>
-            <h1>Your internship hours, tracked to the minute.</h1>
-            <p>No more paper logbooks or lost signatures. Time in, time out, and a running tally your supervisor can approve with one click.</p>
+<AuthShell Headline="Your internship hours, tracked to the minute."
+           Blurb="No more paper logbooks or lost signatures. Time in, time out, and a running tally your supervisor can approve with one click."
+           Foot="142 / 486 hours logged this term"
+           Rows="rows">
+    <p class="mb-1.5 font-mono text-[0.78rem] text-muted">Welcome back</p>
+    <h2 class="mb-1.5 font-serif text-[1.8rem] font-medium text-fg">Sign in</h2>
+    <p class="mb-8 text-[0.95rem] leading-normal text-muted">Pick up where you left off — your logs and reports are waiting.</p>
+
+    @if (!string.IsNullOrEmpty(error))
+    {
+        <div class="alert-error">@error</div>
+    }
+
+    <form @onsubmit="SignIn" @onsubmit:preventDefault>
+        <div class="mb-4">
+            <label for="id_username" class="label">Username</label>
+            <input type="text" id="id_username" class="input" placeholder="Your username" @bind="username" @bind:event="oninput" />
         </div>
-        <div class="ledger-sample">
-            <div class="ledger-row">
-                <span class="day">Mon</span>
-                <span>08:58 AM &nbsp;→&nbsp; 05:02 PM</span>
-                <span class="status ok">approved</span>
-            </div>
-            <div class="ledger-row">
-                <span class="day">Tue</span>
-                <span>09:01 AM &nbsp;→&nbsp; 05:00 PM</span>
-                <span class="status ok">approved</span>
-            </div>
-            <div class="ledger-row">
-                <span class="day">Wed</span>
-                <span>09:00 AM &nbsp;→&nbsp; —</span>
-                <span class="status pending">pending</span>
-            </div>
+        <div class="mb-5">
+            <label for="id_password" class="label">Password</label>
+            <input type="password" id="id_password" class="input" placeholder="Your password" @bind="password" @bind:event="oninput" />
         </div>
-        <div class="ledger-foot">142 / 486 hours logged this term</div>
-    </div>
+        <button type="submit" class="btn-primary w-full active:scale-[0.99]">Sign in</button>
+    </form>
 
-    <div class="form-side">
-        <div class="form-card">
-            <p class="eyebrow">Welcome back</p>
-            <h2>Sign in</h2>
-            <p class="sub">Pick up where you left off — your logs and reports are waiting.</p>
-
-            @if (!string.IsNullOrEmpty(error))
-            {
-                <div class="alert alert-error">@error</div>
-            }
-
-            <form @onsubmit="SignIn" @onsubmit:preventDefault>
-                <div class="field">
-                    <label for="id_username">Username</label>
-                    <input type="text" id="id_username" class="form-input" placeholder="Your username" @bind="username" @bind:event="oninput" required>
-                </div>
-                <div class="field">
-                    <label for="id_password">Password</label>
-                    <input type="password" id="id_password" class="form-input" placeholder="Your password" @bind="password" @bind:event="oninput" required>
-                </div>
-                <button type="submit" class="btn-stamp">Sign in</button>
-            </form>
-
-            <p class="switch-line">New to LogMyOJT? <a href="/register">Create an account</a></p>
-        </div>
-    </div>
-</div>
+    <p class="mt-6 text-center text-sm text-muted">New to LogMyOJT? <a href="/register" class="font-semibold text-accent hover:underline">Create an account</a></p>
+</AuthShell>
 
 @code {
     private string username = "";
     private string password = "";
     private string? error;
+
+    private static readonly AuthShell.LedgerRow[] rows =
+    {
+        new("Mon", "08:58 AM  →  05:02 PM", "approved", true),
+        new("Tue", "09:01 AM  →  05:00 PM", "approved", true),
+        new("Wed", "09:00 AM  →  —", "pending", false),
+    };
 
     // no accounts exist yet (no database), so any username and password gets you in
     private void SignIn()
@@ -75,6 +55,8 @@
         }
 
         State.Username = username.Trim();
+        State.SignedIn = true;
+        State.Notify();
         Nav.NavigateTo("/home");
     }
 }

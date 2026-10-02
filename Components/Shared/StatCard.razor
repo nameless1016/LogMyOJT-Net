@@ -1,0 +1,33 @@
+<div class="card flex items-center justify-between gap-3 px-6 py-5">
+    <div>
+        <div class="@ValueClass">@Value</div>
+        <div class="mt-1 text-[12.5px] text-muted">@Label</div>
+    </div>
+    @if (!string.IsNullOrEmpty(Icon))
+    {
+        <div class="@ChipClass"><Icon Name="@Icon" Class="h-5 w-5" /></div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public string Tone { get; set; } = "";   // "", "accent", "ok" or "danger"
+
+    private string ValueClass => "font-mono text-3xl font-semibold " + Tone switch
+    {
+        "accent" => "text-accent",
+        "ok" => "text-ok",
+        "danger" => "text-danger",
+        _ => "text-fg",
+    };
+
+    private string ChipClass => "flex h-10 w-10 shrink-0 items-center justify-center rounded-full " + Tone switch
+    {
+        "accent" => "bg-accent/10 text-accent",
+        "ok" => "bg-ok/10 text-ok",
+        "danger" => "bg-danger/10 text-danger",
+        _ => "bg-soft/10 text-soft",
+    };
+}

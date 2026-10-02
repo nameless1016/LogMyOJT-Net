@@ -1,53 +1,50 @@
 @page "/profile"
-@inject UserState State
+@inherits SignedInPage
 
 <PageTitle>Profile · LogMyOJT</PageTitle>
 
-<div class="profile-page">
-    <TopBar Active="profile" />
-    <div class="profile-body">
-        <div class="profile-card">
-            <h2>Your profile</h2>
-            <p class="sub">This is how you'll appear on approval requests sent to your supervisor.</p>
+<main class="page">
+    <div class="card mx-auto w-full max-w-[480px] p-9">
+        <h1 class="font-serif text-[1.7rem] font-medium text-fg">Your profile</h1>
+        <p class="mb-6 mt-1 text-[14.7px] text-muted">This is how you'll appear on approval requests sent to your supervisor.</p>
 
-            @if (saved)
-            {
-                <div class="alert alert-success">Profile saved.</div>
-            }
-            @if (!string.IsNullOrEmpty(error))
-            {
-                <div class="alert alert-error">@error</div>
-            }
+        @if (saved)
+        {
+            <div class="alert-success">Profile saved.</div>
+        }
+        @if (!string.IsNullOrEmpty(error))
+        {
+            <div class="alert-error">@error</div>
+        }
 
-            <form @onsubmit="Save" @onsubmit:preventDefault>
-                <div class="avatar-picker">
-                    <span class="avatar-preview">
-                        @if (previewUrl is not null)
-                        {
-                            <img alt="Profile photo" src="@previewUrl">
-                        }
-                        else
-                        {
-                            <span>@State.Initial</span>
-                        }
-                    </span>
-                    <label class="avatar-overlay" for="id_profile_image">Change<br>photo</label>
-                    <InputFile id="id_profile_image" accept="image/*" OnChange="PickImage" />
-                </div>
+        <form @onsubmit="Save" @onsubmit:preventDefault>
+            <div class="group relative mb-6 h-[72px] w-[72px]">
+                <span class="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-line font-mono text-[22px] text-soft">
+                    @if (previewUrl is not null)
+                    {
+                        <img alt="Profile photo" src="@previewUrl" class="h-full w-full object-cover" />
+                    }
+                    else
+                    {
+                        <span>@State.Initial</span>
+                    }
+                </span>
+                <label for="id_profile_image" class="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-bar/65 text-center text-[10px] leading-tight text-cream opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">Change<br />photo</label>
+                <InputFile id="id_profile_image" accept="image/*" OnChange="PickImage" class="sr-only" />
+            </div>
 
-                <div class="field">
-                    <label for="id_full_name">Full name</label>
-                    <input type="text" id="id_full_name" class="form-input" placeholder="Juan Dela Cruz" @bind="fullName" @bind:event="oninput">
-                </div>
-                <div class="field">
-                    <label for="id_bio">Bio</label>
-                    <textarea id="id_bio" class="form-input" placeholder="A short line about your OJT placement..." @bind="bio" @bind:event="oninput"></textarea>
-                </div>
-                <button type="submit" class="btn-stamp">Save profile</button>
-            </form>
-        </div>
+            <div class="mb-4">
+                <label for="id_full_name" class="label">Full name</label>
+                <input type="text" id="id_full_name" class="input" placeholder="Juan Dela Cruz" @bind="fullName" @bind:event="oninput" />
+            </div>
+            <div class="mb-6">
+                <label for="id_bio" class="label">Bio</label>
+                <textarea id="id_bio" rows="4" class="input" placeholder="A short line about your OJT placement..." @bind="bio" @bind:event="oninput"></textarea>
+            </div>
+            <button type="submit" class="btn-primary">Save profile</button>
+        </form>
     </div>
-</div>
+</main>
 
 @code {
     private const long MaxImageBytes = 1024 * 1024;
@@ -60,12 +57,13 @@
 
     protected override void OnInitialized()
     {
+        base.OnInitialized();
         fullName = State.FullName;
         bio = State.Bio;
         previewUrl = State.ProfileImage;
     }
 
-    // shows the picked photo right away, same idea as the old profile.js preview
+    // shows the picked photo right away
     private async Task PickImage(InputFileChangeEventArgs e)
     {
         error = null;
@@ -89,5 +87,6 @@
         State.Bio = bio.Trim();
         State.ProfileImage = previewUrl;
         saved = true;
+        State.Notify();
     }
 }

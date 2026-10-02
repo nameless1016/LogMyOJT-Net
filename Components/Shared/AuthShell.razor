@@ -1,0 +1,40 @@
+@* split layout shared by the login and register pages *@
+<div class="grid min-h-screen lg:grid-cols-[0.9fr_1.1fr]">
+    <aside class="ledger-lines relative hidden flex-col justify-between overflow-hidden bg-bar p-12 text-cream lg:flex">
+        <div class="relative">
+            <span class="brand-mark mb-6 -rotate-2">LOG·MY·OJT</span>
+            <h1 class="mb-3 mt-2 font-serif text-[2.1rem] font-medium leading-tight">@Headline</h1>
+            <p class="max-w-[34ch] leading-relaxed text-cream/80">@Blurb</p>
+        </div>
+        <div class="relative mt-10">
+            <div class="font-mono text-sm">
+                @foreach (var row in Rows)
+                {
+                    <div class="grid grid-cols-[3.5rem_1fr_auto] items-center gap-3 border-b border-cream/10 py-2.5 text-cream/65">
+                        <span class="text-cream/40">@row.Day</span>
+                        <span>@row.Text</span>
+                        <span class="@(row.Ok ? "bg-ok/25 text-[#a9d19a]" : "bg-accent/25 text-[#e8a479]") justify-self-end rounded-[3px] px-2 py-0.5 text-[11.5px]">@row.Status</span>
+                    </div>
+                }
+            </div>
+            <div class="mt-8 font-mono text-xs text-cream/45">@Foot</div>
+        </div>
+    </aside>
+
+    <div class="flex items-center justify-center bg-page px-7 py-12">
+        <div class="w-full max-w-[380px]">
+            <span class="brand-mark mb-8 lg:hidden">LOG·MY·OJT</span>
+            @ChildContent
+        </div>
+    </div>
+</div>
+
+@code {
+    public record LedgerRow(string Day, string Text, string Status, bool Ok);
+
+    [Parameter] public string Headline { get; set; } = "";
+    [Parameter] public string Blurb { get; set; } = "";
+    [Parameter] public string Foot { get; set; } = "";
+    [Parameter] public IEnumerable<LedgerRow> Rows { get; set; } = Array.Empty<LedgerRow>();
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

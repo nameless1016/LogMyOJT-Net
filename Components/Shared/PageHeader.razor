@@ -1,0 +1,16 @@
+<div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div>
+        <h1 class="font-serif text-[1.9rem] font-medium leading-tight text-fg">@Title</h1>
+        @if (!string.IsNullOrEmpty(Subtitle))
+        {
+            <p class="mt-1 text-[15px] text-muted">@Subtitle</p>
+        }
+    </div>
+    @ChildContent
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string? Subtitle { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}
