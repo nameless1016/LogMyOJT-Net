@@ -4,6 +4,7 @@ namespace LogMyOJT.Services;
 // so refreshing the browser resets it. A database can replace this later.
 public class UserState
 {
+    public bool SignedIn { get; set; }
     public string Username { get; set; } = "";
     public string FirstName { get; set; } = "";
     public string LastName { get; set; } = "";
@@ -13,6 +14,10 @@ public class UserState
 
     public bool DarkMode { get; set; }
     public bool EmailNotifications { get; set; } = true;
+
+    // the layout and top bar listen to this so they redraw when something changes
+    public event Action? Changed;
+    public void Notify() => Changed?.Invoke();
 
     public string DisplayName =>
         !string.IsNullOrWhiteSpace(FirstName) ? FirstName :
@@ -27,6 +32,7 @@ public class UserState
 
     public void Clear()
     {
+        SignedIn = false;
         Username = FirstName = LastName = FullName = Bio = "";
         ProfileImage = null;
         DarkMode = false;

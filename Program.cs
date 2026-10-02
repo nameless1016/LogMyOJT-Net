@@ -5,8 +5,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
-// no database yet, so whatever the user types just lives in memory for their session
+// no database yet, so everything the user types just lives in memory for their session
 builder.Services.AddScoped<UserState>();
+builder.Services.AddScoped<OjtState>();
 
 var app = builder.Build();
 
