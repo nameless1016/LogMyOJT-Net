@@ -1,3 +1,22 @@
 @inherits LayoutComponentBase
+@implements IDisposable
+@inject UserState State
 
-@Body
+@* the "dark" class flips every color variable at once, see Styles/input.css *@
+<div class="@(State.DarkMode ? "dark" : "")">
+    <div class="min-h-screen bg-page text-body">
+        @if (State.SignedIn)
+        {
+            <TopBar />
+        }
+        @Body
+    </div>
+</div>
+
+@code {
+    protected override void OnInitialized() => State.Changed += OnChanged;
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => State.Changed -= OnChanged;
+}
