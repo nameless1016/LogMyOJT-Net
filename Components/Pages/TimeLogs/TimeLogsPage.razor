@@ -1,0 +1,157 @@
+@page "/time-logs"
+@inherits SignedInPage
+
+<PageTitle>Time logs · LogMyOJT</PageTitle>
+
+<main class="page">
+    <PageHeader Title="Time logs" Subtitle="@Sub">
+        <a href="/time-logs/new" class="btn-primary"><Icon Name="plus" /> New entry</a>
+    </PageHeader>
+
+    @if (!Ojt.Logs.Any())
+    {
+        <section class="card flex flex-col items-center px-6 py-16 text-center">
+            <div class="flex h-[88px] w-[88px] items-center justify-center rounded-full bg-accent/10 text-accent">
+                <Icon Name="clock" Class="h-10 w-10" Stroke="1.6" />
+            </div>
+            <h2 class="mt-6 font-serif text-[1.4rem] font-medium text-fg">No entries yet</h2>
+            <p class="mt-2 max-w-md text-[14.5px] text-muted">Log your first day and it will show up here for your supervisor to approve.</p>
+            <div class="mt-6 flex flex-wrap justify-center gap-3">
+                <a href="/time-logs/new" class="btn-primary"><Icon Name="plus" /> Log your first day</a>
+                <button type="button" class="btn-outline" @onclick="LoadSample">Load sample data</button>
+            </div>
+        </section>
+    }
+    else
+    {
+        var all = Filtered.ToList();
+        var pages = Math.Max(1, (int)Math.Ceiling(all.Count / (double)PageSize));
+        var shown = all.Skip(pageNo * PageSize).Take(PageSize).ToList();
+
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap gap-2.5">
+                @foreach (var s in Statuses)
+                {
+                    <button type="button" class="@ChipClass(s)" @onclick="() => SetStatus(s)">@s (@Count(s))</button>
+                }
+            </div>
+            <select class="input w-auto min-w-[200px] !py-2 !text-[13.5px]" @bind="month" @bind:after="ResetPage" aria-label="Month">
+                <option value="all">All months</option>
+                @foreach (var m in Months)
+                {
+                    <option value="@m.Key">@m.Label</option>
+                }
+            </select>
+        </div>
+
+        <section class="card overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[820px]">
+                    <thead class="bg-page/70">
+                        <tr class="border-b border-line">
+                            <th class="th">Date</th><th class="th">Time in</th><th class="th">Time out</th><th class="th">Hours</th>
+                            <th class="th">Activity</th><th class="th">Status</th><th class="th"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (shown.Count == 0)
+                        {
+                            <tr><td colspan="7" class="px-6 py-10 text-center text-sm text-muted">No entries match this filter.</td></tr>
+                        }
+                        @foreach (var l in shown)
+                        {
+                            <tr class="border-b border-line last:border-b-0">
+                                <td class="td font-medium text-fg">@Fmt.Date(l.Date)</td>
+                                <td class="td font-mono text-[13.5px]">@Fmt.Time(l.TimeIn)</td>
+                                <td class="td font-mono text-[13.5px]">@(l.TimeOut is { } o ? Fmt.Time(o) : "—")</td>
+                                <td class="td font-mono text-[13.5px] font-medium text-fg">@(l.IsRunning ? "…" : Fmt.Hours(l.Hours))</td>
+                                <td class="td">@(string.IsNullOrWhiteSpace(l.Note) ? "No activity note" : l.Note)</td>
+                                <td class="td"><StatusPill Status="@(l.IsRunning ? "in progress" : l.Status)" /></td>
+                                <td class="td text-right">
+                                    @if (confirmId == l.Id)
+                                    {
+                                        <span class="mr-2 text-[13px] text-muted">Delete?</span>
+                                        <button type="button" class="mr-2 text-[13.5px] font-semibold text-danger hover:underline" @onclick="() => Delete(l.Id)">Yes</button>
+                                        <button type="button" class="text-[13.5px] font-semibold text-soft hover:underline" @onclick="() => confirmId = null">No</button>
+                                    }
+                                    else
+                                    {
+                                        <a href="/time-logs/@l.Id/edit" class="mr-4 text-[13.5px] font-semibold text-accent hover:underline">Edit</a>
+                                        <button type="button" class="text-[13.5px] font-semibold text-muted hover:text-danger" @onclick="() => confirmId = l.Id">Delete</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex flex-wrap items-center justify-between gap-3 border-t border-line px-6 py-3.5">
+                <span class="text-[13px] text-muted">
+                    @(all.Count == 0 ? "0 entries" : $"Showing {pageNo * PageSize + 1}–{pageNo * PageSize + shown.Count} of {all.Count} entries")
+                </span>
+                <div class="flex gap-2">
+                    <button type="button" class="btn-outline btn-sm disabled:opacity-40" disabled="@(pageNo == 0)" @onclick="() => pageNo--">Previous</button>
+                    <button type="button" class="btn-outline btn-sm disabled:opacity-40" disabled="@(pageNo >= pages - 1)" @onclick="() => pageNo++">Next</button>
+                </div>
+            </div>
+        </section>
+    }
+</main>
+
+@code {
+    private const int PageSize = 8;
+    private static readonly System.Globalization.CultureInfo Inv = System.Globalization.CultureInfo.InvariantCulture;
+    private static readonly string[] Statuses = { "All", "Pending", "Approved", "Rejected" };
+
+    private string status = "All";
+    private string month = "all";
+    private int pageNo;
+    private int? confirmId;
+
+    private string Sub => string.IsNullOrWhiteSpace(Ojt.Placement.CompanyName)
+        ? "Every entry you've logged."
+        : $"Every entry you've logged at {Ojt.Placement.CompanyName}.";
+
+    private static string StatusOf(TimeLogEntry l) => l.IsRunning ? "pending" : l.Status;
+
+    private IEnumerable<TimeLogEntry> Filtered => Ojt.Newest.Where(l =>
+        (status == "All" || StatusOf(l) == status.ToLowerInvariant()) &&
+        (month == "all" || l.Date.ToString("yyyy-MM", Inv) == month));
+
+    private int Count(string s) => s == "All" ? Ojt.Logs.Count : Ojt.Logs.Count(l => StatusOf(l) == s.ToLowerInvariant());
+
+    private IEnumerable<(string Key, string Label)> Months => Ojt.Logs
+        .Select(l => new DateOnly(l.Date.Year, l.Date.Month, 1)).Distinct().OrderByDescending(d => d)
+        .Select(d => (d.ToString("yyyy-MM", Inv), d.ToString("MMMM yyyy", Inv)));
+
+    private string ChipClass(string s) => s == status
+        ? "rounded-full bg-fg px-4 py-1.5 text-[13.5px] font-semibold text-page"
+        : "rounded-full border-[1.5px] border-line bg-surface px-4 py-1.5 text-[13.5px] text-soft transition-colors hover:border-soft/50";
+
+    private void SetStatus(string s)
+    {
+        status = s;
+        ResetPage();
+    }
+
+    private void ResetPage()
+    {
+        pageNo = 0;
+        confirmId = null;
+    }
+
+    private void Delete(int id)
+    {
+        Ojt.Remove(id);
+        confirmId = null;
+        var last = Math.Max(0, (int)Math.Ceiling(Filtered.Count() / (double)PageSize) - 1);
+        if (pageNo > last) pageNo = last;
+        State.Notify();
+    }
+
+    private void LoadSample()
+    {
+        Ojt.LoadSample(Today);
+        State.Notify();
+    }
+}

@@ -1,0 +1,157 @@
+@page "/reports"
+@inherits SignedInPage
+
+<PageTitle>Reports · LogMyOJT</PageTitle>
+
+<main class="page">
+    <PageHeader Title="Reports" Subtitle="Turn your logged hours into a file for your school." />
+
+    <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_440px]">
+        @* weekly bar chart *@
+        <section class="card p-7">
+            <div class="flex items-center justify-between">
+                <h2 class="card-title">Hours per week</h2>
+                @if (target is { } t)
+                {
+                    <span class="font-mono text-xs text-muted">Target @Fmt.Hours(t) hrs</span>
+                }
+            </div>
+
+            <div class="relative mt-8 h-[190px]">
+                @foreach (var tick in new[] { 0.0, axisMax / 2, axisMax })
+                {
+                    <div class="absolute inset-x-0 border-t border-line" style="bottom:@Px(tick)px">
+                        <span class="absolute -top-2 left-0 w-6 text-right font-mono text-[11px] text-muted">@Math.Round(tick)</span>
+                    </div>
+                }
+                <div class="absolute inset-0 flex items-end gap-4 pl-10">
+                    @foreach (var w in weeks)
+                    {
+                        <div class="flex h-full flex-1 flex-col items-center justify-end">
+                            <span class="mb-1.5 font-mono text-[12.5px] font-semibold text-fg">@Fmt.Hours(w.Hours)</span>
+                            <div class="@(w.Start == Ojt_WeekStart ? "bg-accent/60" : "bg-fg") w-full max-w-[64px] rounded-[3px]" style="height:@Px(w.Hours)px"></div>
+                        </div>
+                    }
+                </div>
+                @if (target is { } line)
+                {
+                    <div class="absolute inset-x-0 left-10 border-t-[1.5px] border-dashed border-accent" style="bottom:@Px(line)px"></div>
+                }
+            </div>
+            <div class="mt-2 flex gap-4 pl-10">
+                @foreach (var w in weeks)
+                {
+                    <div class="flex-1 text-center font-mono text-[11.5px] text-muted">@w.Start.ToString("MMM d", Inv)</div>
+                }
+            </div>
+        </section>
+
+        @* generate *@
+        <section class="card p-7">
+            <h2 class="card-title">Generate a report</h2>
+
+            <div class="mt-5 grid grid-cols-3 gap-1 rounded-md border-[1.5px] border-line bg-page p-[3px]" role="group" aria-label="Period">
+                @foreach (var p in Periods)
+                {
+                    <button type="button" class="@(p == period ? "bg-fg text-page font-semibold" : "text-soft") rounded px-1 py-2 text-[13px] transition-colors" @onclick="() => period = p">@p</button>
+                }
+            </div>
+
+            <div class="mt-4">
+                <label class="label">Date range</label>
+                <div class="input">@RangeText</div>
+            </div>
+
+            <label class="mt-4 flex cursor-pointer items-center gap-2.5 text-sm text-body">
+                <input type="checkbox" class="h-4 w-4 accent-[rgb(var(--accent))]" @bind="includeNotes" />
+                Include activity notes
+            </label>
+
+            <button type="button" class="btn-primary mt-5 w-full" @onclick="Generate"><Icon Name="file" /> Generate report</button>
+        </section>
+    </div>
+
+    <section class="card mt-5 overflow-hidden">
+        <h2 class="card-title px-7 pb-4 pt-6">Past reports</h2>
+        @if (Ojt.Reports.Count == 0)
+        {
+            <p class="border-t border-line px-7 py-10 text-center text-sm text-muted">No reports yet. Generate one above and it will show up here.</p>
+        }
+        else
+        {
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[620px]">
+                    <thead class="bg-page/70">
+                        <tr class="border-y border-line"><th class="th">Generated</th><th class="th">Period</th><th class="th">Hours included</th><th class="th"></th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Ojt.Reports)
+                        {
+                            <tr class="border-b border-line last:border-b-0">
+                                <td class="td font-medium text-fg">@Fmt.LongDate(DateOnly.FromDateTime(r.GeneratedAt))</td>
+                                <td class="td">@r.Label</td>
+                                <td class="td font-mono text-[13.5px]">@Fmt.Hours(r.Hours) hrs</td>
+                                <td class="td text-right">
+                                    <a href="@DataUrl(r)" download="@r.FileName" class="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-accent hover:underline">
+                                        <Icon Name="download" Class="h-[15px] w-[15px]" /> Download CSV
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</main>
+
+@code {
+    private static readonly System.Globalization.CultureInfo Inv = System.Globalization.CultureInfo.InvariantCulture;
+    private static readonly string[] Periods = { "Weekly", "Monthly", "Full placement" };
+
+    private string period = "Full placement";
+    private bool includeNotes = true;
+
+    private const double ChartHeight = 190;
+
+    private List<(DateOnly Start, double Hours)> weeks = new();
+    private double? target;
+    private double axisMax = 8;
+
+    private DateOnly Ojt_WeekStart => OjtState.WeekStart(Today);
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        weeks = Ojt.WeeklyHours(Today);
+        target = Ojt.NeededPerWeek();
+        double biggest = Math.Max(weeks.Max(w => w.Hours), target ?? 0);
+        axisMax = Math.Max(8, Math.Ceiling(biggest / 8) * 8);
+    }
+
+    private string Px(double hours) => (hours / axisMax * ChartHeight).ToString("0.0", Inv);
+
+    private string RangeText
+    {
+        get
+        {
+            var start = OjtState.WeekStart(Today);
+            return period switch
+            {
+                "Weekly" => $"{start.ToString("MMM d", Inv)} – {start.AddDays(6).ToString("MMM d, yyyy", Inv)}",
+                "Monthly" => Today.ToString("MMMM yyyy", Inv),
+                _ => "All entries to date",
+            };
+        }
+    }
+
+    private void Generate()
+    {
+        var name = string.IsNullOrWhiteSpace(State.FullName) ? $"{State.FirstName} {State.LastName}".Trim() : State.FullName;
+        if (name.Length == 0) name = State.Username;
+        Ojt.BuildReport(period, Today, includeNotes, DateTime.Now, name);
+    }
+
+    // the csv is put right inside the link so no server file is needed, the BOM is for Excel
+    private static string DataUrl(ReportRecord r) => "data:text/csv;charset=utf-8," + Uri.EscapeDataString("\uFEFF" + r.Csv);
+}

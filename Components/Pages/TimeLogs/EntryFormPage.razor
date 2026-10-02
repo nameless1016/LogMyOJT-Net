@@ -1,0 +1,159 @@
+@page "/time-logs/new"
+@page "/time-logs/{Id:int}/edit"
+@inherits SignedInPage
+
+<PageTitle>@(IsEdit ? "Edit entry" : "New entry") · LogMyOJT</PageTitle>
+
+<main class="page">
+    <PageHeader Title="@(IsEdit ? "Edit time entry" : "New time entry")"
+                Subtitle="@(IsEdit ? "Fix the times or add an activity note." : "Log your hours for a day.")" />
+
+    <div class="flex flex-col items-start gap-5 lg:flex-row lg:justify-center">
+        <section class="card w-full max-w-[620px] p-7">
+            @if (errors.Count > 0)
+            {
+                <div class="alert-error">
+                    <ul class="list-disc pl-4">
+                        @foreach (var msg in errors)
+                        {
+                            <li>@msg</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            <form @onsubmit="Save" @onsubmit:preventDefault>
+                <div class="mb-4">
+                    <label for="entry_date" class="label">Date</label>
+                    <input type="date" id="entry_date" class="input" value="@date" @onchange="a => date = a.Value?.ToString() ?? string.Empty" />
+                </div>
+                <div class="mb-4 grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <label for="entry_in" class="label">Time in</label>
+                        <input type="time" id="entry_in" class="input" value="@timeIn" @oninput="a => timeIn = a.Value?.ToString() ?? string.Empty" />
+                    </div>
+                    <div>
+                        <label for="entry_out" class="label">Time out</label>
+                        <input type="time" id="entry_out" class="input" value="@timeOut" @oninput="a => timeOut = a.Value?.ToString() ?? string.Empty" />
+                        <div class="help">Leave empty if you're still working.</div>
+                    </div>
+                </div>
+
+                <div class="mb-4 flex items-center justify-between rounded-md border-[1.5px] border-dashed border-line bg-page px-4 py-3">
+                    <span class="text-sm text-soft">Hours computed</span>
+                    <span class="font-mono text-lg font-semibold text-fg">@HoursText</span>
+                </div>
+
+                <div class="mb-6">
+                    <label for="entry_note" class="label">Activity note</label>
+                    <textarea id="entry_note" rows="4" class="input" placeholder="What did you work on today?" @bind="note" @bind:event="oninput"></textarea>
+                </div>
+
+                <div class="flex flex-wrap gap-3">
+                    <button type="submit" class="btn-primary min-w-[150px]">Save entry</button>
+                    <a href="/time-logs" class="btn-outline">Cancel</a>
+                </div>
+            </form>
+        </section>
+
+        <aside class="card w-full max-w-[620px] p-7 lg:w-[320px]">
+            <h2 class="card-title">Before you save</h2>
+            <ul class="mt-4 space-y-3 text-[13.5px] text-soft">
+                <li class="flex gap-2.5"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent"></span> Time out is optional. You can add it later.</li>
+                <li class="flex gap-2.5"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent"></span> A short note helps your supervisor approve faster.</li>
+                <li class="flex gap-2.5"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent"></span> You can edit an entry until it's approved.</li>
+            </ul>
+        </aside>
+    </div>
+</main>
+
+@code {
+    private static readonly System.Globalization.CultureInfo Inv = System.Globalization.CultureInfo.InvariantCulture;
+
+    [Parameter] public int? Id { get; set; }
+
+    private string date = "";
+    private string timeIn = "09:00";
+    private string timeOut = "17:00";
+    private string note = "";
+    private List<string> errors = new();
+    private bool loaded;
+    private int? loadedId;
+
+    private bool IsEdit => Id is not null;
+
+    protected override void OnParametersSet()
+    {
+        if (loaded && loadedId == Id) return;
+        loaded = true;
+        loadedId = Id;
+
+        if (Id is null)
+        {
+            date = Today.ToString("yyyy-MM-dd", Inv);
+            return;
+        }
+
+        var entry = Ojt.Find(Id.Value);
+        if (entry is null)
+        {
+            Nav.NavigateTo("/time-logs");
+            return;
+        }
+
+        date = entry.Date.ToString("yyyy-MM-dd", Inv);
+        timeIn = entry.TimeIn.ToString("HH:mm", Inv);
+        timeOut = entry.TimeOut?.ToString("HH:mm", Inv) ?? "";
+        note = entry.Note;
+    }
+
+    private string HoursText =>
+        TimeOnly.TryParse(timeIn, Inv, out var a) && TimeOnly.TryParse(timeOut, Inv, out var b) && b > a
+            ? Fmt.Hours((b.ToTimeSpan() - a.ToTimeSpan()).TotalHours) + " hrs"
+            : "—";
+
+    private void Save()
+    {
+        errors = new List<string>();
+
+        if (!DateOnly.TryParse(date, Inv, out var d)) errors.Add("Pick a valid date.");
+        else if (d > Today) errors.Add("The date can't be in the future.");
+
+        TimeOnly tin = default;
+        TimeOnly? tout = null;
+
+        if (!TimeOnly.TryParse(timeIn, Inv, out tin)) errors.Add("Time in is required.");
+
+        if (!string.IsNullOrWhiteSpace(timeOut))
+        {
+            if (!TimeOnly.TryParse(timeOut, Inv, out var parsedOut)) errors.Add("Time out isn't a valid time.");
+            else
+            {
+                tout = parsedOut;
+                if (errors.Count == 0 && parsedOut <= tin) errors.Add("Time out has to be after time in.");
+            }
+        }
+        else if (Ojt.Running is { } running && running.Id != Id)
+        {
+            errors.Add("You already have a running entry. Time out of that one first.");
+        }
+
+        if (errors.Count > 0) return;
+
+        if (Id is null)
+        {
+            Ojt.Add(new TimeLogEntry { Date = d, TimeIn = tin, TimeOut = tout, Note = note.Trim() });
+        }
+        else if (Ojt.Find(Id.Value) is { } entry)
+        {
+            entry.Date = d;
+            entry.TimeIn = tin;
+            entry.TimeOut = tout;
+            entry.Note = note.Trim();
+            if (entry.Status == "rejected") entry.Status = "pending";   // editing a rejected entry sends it back for review
+        }
+
+        State.Notify();
+        Nav.NavigateTo("/time-logs");
+    }
+}

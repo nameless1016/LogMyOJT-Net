@@ -1,0 +1,162 @@
+@page "/placement"
+@inherits SignedInPage
+@inject IJSRuntime JS
+
+<PageTitle>Placement · LogMyOJT</PageTitle>
+
+<main class="page">
+    <PageHeader Title="My placement" Subtitle="Where you're training and who signs off your hours." />
+
+    <div class="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_440px]">
+        <section class="card p-7">
+            <h2 class="card-title mb-5">Company &amp; supervisor</h2>
+
+            @if (saved)
+            {
+                <div class="alert-success">Placement saved.</div>
+            }
+            @if (errors.Count > 0)
+            {
+                <div class="alert-error">
+                    <ul class="list-disc pl-4">
+                        @foreach (var msg in errors)
+                        {
+                            <li>@msg</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            <form @onsubmit="Save" @onsubmit:preventDefault>
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <label for="p_company" class="label">Company name</label>
+                        <input type="text" id="p_company" class="input" placeholder="Northwind Tech" @bind="form.CompanyName" @bind:event="oninput" />
+                    </div>
+                    <div>
+                        <label for="p_sup" class="label">Supervisor name</label>
+                        <input type="text" id="p_sup" class="input" placeholder="Engr. Daniel Cruz" @bind="form.SupervisorName" @bind:event="oninput" />
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label for="p_addr" class="label">Company address</label>
+                        <input type="text" id="p_addr" class="input" placeholder="Street, city" @bind="form.CompanyAddress" @bind:event="oninput" />
+                    </div>
+                    <div>
+                        <label for="p_email" class="label">Supervisor email</label>
+                        <input type="email" id="p_email" class="input" placeholder="name@company.com" @bind="form.SupervisorEmail" @bind:event="oninput" />
+                    </div>
+                    <div>
+                        <label for="p_phone" class="label">Supervisor phone</label>
+                        <input type="tel" id="p_phone" class="input" placeholder="0917 000 0000" @bind="form.SupervisorPhone" @bind:event="oninput" />
+                    </div>
+                </div>
+                <div class="mt-4 grid gap-4 sm:grid-cols-3">
+                    <div>
+                        <label for="p_hours" class="label">Required hours</label>
+                        <input type="number" id="p_hours" min="1" class="input" @bind="requiredText" @bind:event="oninput" />
+                    </div>
+                    <div>
+                        <label for="p_start" class="label">Start date</label>
+                        <input type="date" id="p_start" class="input" value="@startText" @onchange="a => startText = a.Value?.ToString() ?? string.Empty" />
+                    </div>
+                    <div>
+                        <label for="p_end" class="label">End date</label>
+                        <input type="date" id="p_end" class="input" value="@endText" @onchange="a => endText = a.Value?.ToString() ?? string.Empty" />
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary mt-6 min-w-[160px]">Save placement</button>
+            </form>
+        </section>
+
+        <div class="space-y-5">
+            <section class="card p-7">
+                <h2 class="card-title">Summary</h2>
+                <dl class="mt-4 text-sm">
+                    <div class="flex justify-between border-b border-line py-3"><dt class="text-muted">Days left</dt><dd class="font-mono font-semibold text-fg">@(Ojt.DaysLeft(Today)?.ToString() ?? "—")</dd></div>
+                    <div class="flex justify-between border-b border-line py-3"><dt class="text-muted">Needed per working day</dt><dd class="font-mono font-semibold text-fg">@(Ojt.NeededPerWorkingDay(Today) is { } n ? Fmt.Hours(n) + " hrs" : "—")</dd></div>
+                    <div class="flex justify-between py-3"><dt class="text-muted">Ends</dt><dd class="font-mono font-semibold text-fg">@(Ojt.Placement.EndDate is { } e ? Fmt.LongDate(e) : "—")</dd></div>
+                </dl>
+                <div class="mt-3 flex justify-between font-mono text-[13px] text-soft">
+                    <span>@Fmt.Hours(Ojt.HoursLogged) / @Ojt.Placement.RequiredHours hrs</span>
+                    <span class="font-semibold text-fg">@Ojt.PercentDone%</span>
+                </div>
+                <div class="mt-2 h-2 overflow-hidden rounded-full bg-line">
+                    <div class="h-full rounded-full bg-accent" style="width:@Ojt.PercentDone%"></div>
+                </div>
+            </section>
+
+            <section class="card p-7">
+                <h2 class="card-title">Supervisor approval link</h2>
+                <p class="mt-2 text-[13px] text-muted">Send this to your supervisor. No account needed.</p>
+                <div class="mt-4 flex gap-2">
+                    <div class="min-w-0 flex-1 truncate rounded border-[1.5px] border-line bg-page px-3.5 py-2.5 font-mono text-sm text-body">@Link</div>
+                    <button type="button" class="btn-outline shrink-0 !px-4" @onclick="Copy">
+                        <Icon Name="@(copied ? "check" : "copy")" /> @(copied ? "Copied" : "Copy")
+                    </button>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+@code {
+    private static readonly System.Globalization.CultureInfo Inv = System.Globalization.CultureInfo.InvariantCulture;
+
+    private Placement form = new();
+    private string requiredText = "";
+    private string startText = "";
+    private string endText = "";
+    private List<string> errors = new();
+    private bool saved;
+    private bool copied;
+
+    private string Link => $"logmyojt.app/v/{Ojt.Placement.ApprovalCode}";
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        form = Ojt.Placement.Clone();
+        requiredText = form.RequiredHours.ToString(Inv);
+        startText = form.StartDate?.ToString("yyyy-MM-dd", Inv) ?? "";
+        endText = form.EndDate?.ToString("yyyy-MM-dd", Inv) ?? "";
+    }
+
+    private void Save()
+    {
+        saved = false;
+        errors = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(form.CompanyName)) errors.Add("Company name is required.");
+        if (!double.TryParse(requiredText, Inv, out var hours) || hours <= 0) errors.Add("Required hours has to be more than 0.");
+        if (!string.IsNullOrWhiteSpace(form.SupervisorEmail) && !form.SupervisorEmail.Contains('@')) errors.Add("That supervisor email doesn't look right.");
+
+        DateOnly? start = null, end = null;
+        if (!string.IsNullOrWhiteSpace(startText))
+        {
+            if (DateOnly.TryParse(startText, Inv, out var s)) start = s; else errors.Add("Start date isn't valid.");
+        }
+        if (!string.IsNullOrWhiteSpace(endText))
+        {
+            if (DateOnly.TryParse(endText, Inv, out var e)) end = e; else errors.Add("End date isn't valid.");
+        }
+        if (start is { } a && end is { } b && b <= a) errors.Add("End date has to be after the start date.");
+
+        if (errors.Count > 0) return;
+
+        form.RequiredHours = hours;
+        form.StartDate = start;
+        form.EndDate = end;
+        form.ApprovalCode = Ojt.Placement.ApprovalCode;
+        Ojt.Placement = form.Clone();
+        saved = true;
+        State.Notify();
+    }
+
+    private async Task Copy()
+    {
+        copied = await JS.InvokeAsync<bool>("logmyojt.copy", Link);
+        if (!copied) return;
+        await Task.Delay(2000);
+        copied = false;
+    }
+}
