@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --page: 250 246 237;
+    --surface: 255 255 255;
+    --bar: 27 42 65;
+    --fg: 27 42 65;
+    --body: 43 43 40;
+    --soft: 51 70 95;
+    --muted: 107 101 89;
+    --line: 228 220 200;
+    --accent: 193 98 45;
+    --accent-dark: 164 79 34;
+    --ok: 79 121 66;
+    --danger: 179 57 44;
+  }
+
+  /* dark mode, the layout adds the "dark" class when the setting is on */
+  .dark {
+    --page: 18 22 29;
+    --surface: 27 34 44;
+    --bar: 13 19 29;
+    --fg: 243 237 224;
+    --body: 217 212 199;
+    --soft: 185 192 204;
+    --muted: 154 148 132;
+    --line: 46 56 70;
+    --accent: 217 119 63;
+    --accent-dark: 232 140 85;
+    --ok: 127 176 111;
+    --danger: 212 106 106;
+  }
+
+  body {
+    @apply bg-page font-sans text-body antialiased;
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    @apply outline outline-2 outline-offset-2 outline-accent;
+  }
+}
+
+@layer components {
+  .page {
+    @apply mx-auto w-full max-w-[1200px] px-5 py-8 md:px-8 md:py-10;
+  }
+
+  .brand-mark {
+    @apply inline-block rounded-[3px] border border-accent px-2 py-0.5 font-mono text-[0.8rem] tracking-wider text-accent transition-opacity hover:opacity-80;
+  }
+
+  /* buttons */
+  .btn {
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded px-4 py-3 text-[0.95rem] font-semibold transition-colors;
+  }
+  .btn-primary {
+    @apply btn bg-accent text-cream hover:bg-accent-dark;
+  }
+  .btn-outline {
+    @apply btn border-[1.5px] border-soft/60 bg-surface text-soft hover:bg-page;
+  }
+  .btn-sm {
+    @apply px-3 py-1.5 text-[13px];
+  }
+  .btn-ok {
+    @apply btn btn-sm border-[1.5px] border-ok bg-surface text-ok hover:bg-ok/10;
+  }
+  .btn-danger {
+    @apply btn btn-sm border-[1.5px] border-danger bg-surface text-danger hover:bg-danger/10;
+  }
+
+  /* forms */
+  .input {
+    @apply w-full rounded border-[1.5px] border-line bg-surface px-3.5 py-2.5 text-[0.95rem] text-body placeholder:text-muted/60 focus:border-accent focus:outline-none;
+  }
+  .label {
+    @apply mb-1.5 block text-[0.82rem] font-medium text-soft;
+  }
+  .help {
+    @apply mt-1.5 text-[0.78rem] text-muted;
+  }
+
+  .alert {
+    @apply mb-5 rounded border px-3.5 py-2.5 text-[13.5px];
+  }
+  .alert-error {
+    @apply alert border-danger/25 bg-danger/10 text-danger;
+  }
+  .alert-success {
+    @apply alert border-ok/25 bg-ok/10 text-ok;
+  }
+
+  /* cards and tables */
+  .card {
+    @apply rounded-lg border-[1.5px] border-line bg-surface shadow-soft;
+  }
+  .card-title {
+    @apply text-base font-semibold text-fg;
+  }
+  .eyebrow {
+    @apply font-mono text-[11px] font-medium uppercase tracking-[0.1em] text-muted;
+  }
+  .th {
+    @apply px-6 py-3 text-left font-mono text-[10.5px] font-medium uppercase tracking-[0.08em] text-muted;
+  }
+  .td {
+    @apply px-6 py-3.5 text-sm text-soft;
+  }
+
+  /* status pills */
+  .pill {
+    @apply inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 font-mono text-[11.5px] font-medium;
+  }
+  .pill-pending {
+    @apply pill bg-accent/15 text-accent;
+  }
+  .pill-approved {
+    @apply pill bg-ok/15 text-ok;
+  }
+  .pill-rejected {
+    @apply pill bg-danger/15 text-danger;
+  }
+
+  /* top bar tabs */
+  .tab {
+    @apply relative flex h-[71px] items-center gap-1.5 text-sm text-cream/65 transition-colors hover:text-cream;
+  }
+  .tab-active {
+    @apply font-semibold text-cream after:absolute after:inset-x-0 after:bottom-0 after:h-[3px] after:bg-accent after:content-[''];
+  }
+
+  .menu {
+    @apply absolute right-0 top-full z-20 mt-2 min-w-[170px] rounded-lg border-[1.5px] border-line bg-surface p-1.5 shadow-pop;
+  }
+  .menu-item {
+    @apply flex w-full items-center gap-2.5 rounded px-3 py-2 text-left text-sm text-body transition-colors hover:bg-page;
+  }
+
+  /* the faint ruled lines on the login side panel */
+  .ledger-lines::before {
+    content: "";
+    @apply pointer-events-none absolute inset-0;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 47px,
+      rgba(250, 246, 237, 0.06) 48px
+    );
+  }
+}
